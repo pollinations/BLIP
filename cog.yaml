@@ -1,6 +1,5 @@
 build:
   gpu: true
-  cuda: "11.1"
   python_version: "3.8"
   system_packages:
     - "libgl1-mesa-glx"
@@ -13,5 +12,9 @@ build:
     - "transformers==4.15.0"
     - "fairscale==0.4.4"
     - "pycocoevalcap==1.2"
-
+  run:
+    - mkdir /checkpoints
+    - wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_vqa.pth -O /checkpoints/model_vqa.pth
+    - wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth -O /checkpoints/model_base_caption_capfilt_large.pth
+    - wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_retrieval_coco.pth -O /checkpoints/model_base_retrieval_coco.pth
 predict: "predict.py:Predictor"

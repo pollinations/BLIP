@@ -5,62 +5,67 @@ wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/mod
 wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_retrieval_coco.pth
 """
 
+import os
 from pathlib import Path
 
-from PIL import Image
 import torch
+from cog import BasePredictor, Input, Path
+from models.blip import blip_decoder
+from models.blip_itm import blip_itm
+from models.blip_vqa import blip_vqa
+from PIL import Image
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
-import cog
-
-from models.blip import blip_decoder
-from models.blip_vqa import blip_vqa
-from models.blip_itm import blip_itm
 
 
-class Predictor(cog.Predictor):
+class Predictor(BasePredictor):
     def setup(self):
         self.device = "cuda:0"
-
+        os.system("ls -l /checkpoints")
         self.models = {
-            'image_captioning': blip_decoder(pretrained='checkpoints/model*_base_caption.pth',
-                                             image_size=384, vit='base'),
-            'visual_question_answering': blip_vqa(pretrained='checkpoints/model*_vqa.pth',
+            # 'image_captioning': blip_decoder(pretrained='/checkpoints/model_base_caption_capfilt_large.pth',
+            #                                  image_size=384, vit='base'),
+            'visual_question_answering': blip_vqa(pretrained='/checkpoints/model_vqa.pth',
                                                   image_size=480, vit='base'),
-            'image_text_matching': blip_itm(pretrained='checkpoints/model_base_retrieval_coco.pth',
-                                            image_size=384, vit='base')
+            # 'image_text_matching': blip_itm(pretrained='/checkpoints/model_base_retrieval_coco.pth',
+            #                                 image_size=384, vit='base')
         }
 
-    @cog.input(
-        "image",
-        type=Path,
-        help="input image",
-    )
-    @cog.input(
-        "task",
-        type=str,
-        default='image_captioning',
-        options=['image_captioning', 'visual_question_answering', 'image_text_matching'],
-        help="Choose a task.",
-    )
-    @cog.input(
-        "question",
-        type=str,
-        default=None,
-        help="Type question for the input image for visual question answering task.",
-    )
-    @cog.input(
-        "caption",
-        type=str,
-        default=None,
-        help="Type caption for the input image for image text matching task.",
-    )
-    def predict(self, image, task, question, caption):
-        if task == 'visual_question_answering':
-            assert question is not None, 'Please type a question for visual question answering task.'
-        if task == 'image_text_matching':
-            assert caption is not None, 'Please type a caption for mage text matching task.'
-
+    # @cog.input(
+    #     "image",
+    #     type=Path,
+    #     help="input image",
+    # )
+    # @cog.input(
+    #     "task",
+    #     type=str,
+    #     default='image_captioning',
+    #     options=['image_captioning', 'visual_question_answering', 'image_text_matching'],
+    #     help="Choose a task.",
+    # )
+    # @cog.input(
+    #     "question",
+    #     type=str,
+    #     default=None,
+    #     help="Type question for the input image for visual question answering task.",
+    # )
+    # @cog.input(
+    #     "caption",
+    #     type=str,
+    #     default=None,
+    #     help="Type caption for the input image for image text matching task.",
+    # )
+    def predict(self, 
+        image: Path = Input(description="input image"),
+        task: str = Input(
+            description='task',
+            default='visual_question_answering',
+            choices=['image_captioning', 'visual_question_answering', 'image_text_matching'],        
+        ),
+        question: str = Input(
+            description='question',
+            default="What is the age in years of the person?",
+        )) -> str:
         im = load_image(image, image_size=480 if task == 'visual_question_answering' else 384, device=self.device)
         model = self.models[task]
         model.eval()
