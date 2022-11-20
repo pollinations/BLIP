@@ -79,6 +79,12 @@ class Predictor(BasePredictor):
         if task == 'visual_question_answering':
             with torch.no_grad():
                 answer = model(im, question, train=False, inference='generate')
+                # Write answer[0] to /outputs/answer
+                try:
+                    with open('/outputs/answer', 'w') as f:
+                        f.write(answer[0])
+                except:
+                    pass
                 return 'Answer: ' + answer[0]
 
         # image_text_matching
