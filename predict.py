@@ -78,14 +78,20 @@ class Predictor(BasePredictor):
 
         if task == 'visual_question_answering':
             with torch.no_grad():
-                answer = model(im, question, train=False, inference='generate')
+                questions = question.splitlines()
+                
+                answers = [answer_question(model,im, question) for question in questions]
+                
+                # join the answers
+                answer = "\n".join(answers)
+
                 # Write answer[0] to /outputs/answer
                 try:
                     with open('/outputs/answer', 'w') as f:
-                        f.write(answer[0])
+                        f.write(answer)
                 except:
                     pass
-                return 'Answer: ' + answer[0]
+                return 'Answer: ' + answer
 
         # image_text_matching
         itm_output = model(im, caption, match_head='itm')
@@ -94,6 +100,9 @@ class Predictor(BasePredictor):
         return f'The image and text is matched with a probability of {itm_score.item():.4f}.\n' \
                f'The image feature and text feature has a cosine similarity of {itc_score.item():.4f}.'
 
+def answer_question(model, im, question):
+    print("answering question", question)
+    return model(im, question, train=False, inference='generate')[0]
 
 def load_image(image, image_size, device):
     raw_image = Image.open(str(image)).convert('RGB')
