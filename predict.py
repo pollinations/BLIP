@@ -86,12 +86,12 @@ class Predictor(BasePredictor):
                 answer = "\n".join(answers)
 
                 # Write answer[0] to /outputs/answer
-                try:
-                    with open('/outputs/answer', 'w') as f:
-                        f.write(answer)
-                except:
-                    pass
-                return 'Answer: ' + answer
+                # try:
+                #     with open('/outputs/answer', 'w') as f:
+                #         f.write(answer)
+                # except:
+                #     pass
+                return answer
 
         # image_text_matching
         itm_output = model(im, caption, match_head='itm')
